@@ -26,7 +26,6 @@ void Game::update()
 
 void Game::run()
 {
-    m_window->InitPrintScreen(dl::BOTTOM_SCREEN);
     while (m_window->isOpen())
     {
         update();

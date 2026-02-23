@@ -71,7 +71,8 @@ void PlatformerScene::loadLevel(int levelIndex)
             {
                 dl::Sprite *tile = new dl::Sprite;
                 tile->loadFromSpriteSheet(m_tileSpriteSheet, tileBuf - 1);
-                tile->setPosition({static_cast<float>(col * TILE_SIZE), static_cast<float>(row * TILE_SIZE)});
+                tile->setScale({SPRITE_SCALE, SPRITE_SCALE});
+                tile->setPosition({static_cast<float>(col * TILE_SIZE * SPRITE_SCALE), static_cast<float>(row * TILE_SIZE * SPRITE_SCALE)});
                 m_level.back().push_back(tile);
             } else
             {
@@ -98,6 +99,10 @@ void PlatformerScene::render(dl::RenderWindow &window)
         }
     }
     m_player->drawPlayer(window); // Player will also display, so put all draw calls above this
+
+    window.clear(dl::BOTTOM_SCREEN);
+    window.draw(m_backgroundSprite);
+    window.display();
 }
 
 void PlatformerScene::update()

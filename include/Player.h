@@ -5,6 +5,8 @@
 #ifndef DUALIE_PLATFORMER_PLAYER_H
 #define DUALIE_PLATFORMER_PLAYER_H
 #include <Dualie/Graphics.hpp>
+#include <Settings.h>
+#include <algorithm>
 
 typedef std::vector<std::vector<dl::Sprite *> > Level;
 

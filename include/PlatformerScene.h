@@ -12,7 +12,7 @@
 
 
 class PlatformerScene : public Scene {
-    static constexpr int TILE_SIZE = 16;
+
 
     dl::SpriteSheet m_tileSpriteSheet;
     dl::SpriteSheet m_backgroundSpriteSheet;

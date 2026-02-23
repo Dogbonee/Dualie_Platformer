@@ -6,11 +6,11 @@
 
 Player::Player(std::vector<dl::SpriteSheet *> &spriteSheets, Level *level) : p_spriteSheets(&spriteSheets),
                                                                              p_currentSheet(&spriteSheets[0]),
-                                                                             p_level(level), m_speed(150),
+                                                                             p_level(level), m_speed(400),
                                                                              m_animationClock(0), m_frameTime(0.1),
                                                                              m_frames(4), m_currentFrame(0),
                                                                              m_gravity(0.5), m_isOnGround(false),
-                                                                             m_jumpForce(0.15), m_facingRight(true)
+                                                                             m_jumpForce(0.4), m_facingRight(true)
 {
     m_sprite.loadFromSpriteSheet(*spriteSheets[0], 0);
     m_sprite.setPosition({120, 120});
@@ -31,12 +31,18 @@ void Player::handleMovement(float dt)
     }
 
 
-    dl::FloatRect projectedX = dl::FloatRect(m_sprite.getPosition() + dl::Vector2f(m_velocity.x, 0), {16, 16});
-    dl::FloatRect projectedY = dl::FloatRect(m_sprite.getPosition() + dl::Vector2f(0, m_velocity.y), {16, 16});
+    dl::FloatRect projectedX = dl::FloatRect(m_sprite.getPosition() + dl::Vector2f(m_velocity.x, 0), {TILE_SIZE * SPRITE_SCALE, TILE_SIZE * SPRITE_SCALE});
+    dl::FloatRect projectedY = dl::FloatRect(m_sprite.getPosition() + dl::Vector2f(0, m_velocity.y), {TILE_SIZE * SPRITE_SCALE, TILE_SIZE * SPRITE_SCALE});
+
+    if (projectedX.left < 0)
+    {
+        m_sprite.setPosition({0, m_sprite.getPosition().y});
+        m_velocity.x = 0;
+    }
 
     dl::Vector2i projectedUnit = {
-        static_cast<int>((m_sprite.getPosition().x + m_velocity.x) / 16),
-        static_cast<int>((m_sprite.getPosition().y + m_velocity.y) / 16)
+        static_cast<int>((m_sprite.getPosition().x + m_velocity.x) / (TILE_SIZE * SPRITE_SCALE)),
+        static_cast<int>((m_sprite.getPosition().y + m_velocity.y) / (TILE_SIZE * SPRITE_SCALE))
     };
 
     for (int i = projectedUnit.y - 1; i <= projectedUnit.y + 1; i++)
@@ -50,16 +56,16 @@ void Player::handleMovement(float dt)
             dl::Sprite *tile = (*p_level)[i][j];
             if (tile)
             {
-                dl::FloatRect tileRect(tile->getPosition(), {16, 16});
+                dl::FloatRect tileRect(tile->getPosition(), {TILE_SIZE * SPRITE_SCALE, TILE_SIZE * SPRITE_SCALE});
 
                 if (projectedX.intersects(tileRect))
                 {
                     if (m_velocity.x > 0)
                     {
-                        m_sprite.setPosition({tile->getPosition().x - 16, m_sprite.getPosition().y});
+                        m_sprite.setPosition({tile->getPosition().x - (TILE_SIZE * SPRITE_SCALE), m_sprite.getPosition().y});
                     } else if (m_velocity.x < 0)
                     {
-                        m_sprite.setPosition({tile->getPosition().x + 16, m_sprite.getPosition().y});
+                        m_sprite.setPosition({tile->getPosition().x + (TILE_SIZE * SPRITE_SCALE), m_sprite.getPosition().y});
                     }
                     m_velocity.x = 0;
                 }
@@ -68,11 +74,11 @@ void Player::handleMovement(float dt)
                 {
                     if (m_velocity.y > 0)
                     {
-                        m_sprite.setPosition({m_sprite.getPosition().x, tile->getPosition().y - 16});
+                        m_sprite.setPosition({m_sprite.getPosition().x, tile->getPosition().y - (TILE_SIZE * SPRITE_SCALE)});
                         m_isOnGround = true;
                     } else if (m_velocity.y < 0)
                     {
-                        m_sprite.setPosition({m_sprite.getPosition().x, tile->getPosition().y + 16});
+                        m_sprite.setPosition({m_sprite.getPosition().x, tile->getPosition().y + (TILE_SIZE * SPRITE_SCALE)});
                     }
                     m_velocity.y = 0;
                 }
@@ -121,7 +127,7 @@ void Player::handleAnimation(float dt)
     {
         m_facingRight = false;
     }
-    m_sprite.setScale({m_facingRight ? 1.f : -1.f, 1});
+    m_sprite.setScale({m_facingRight ? SPRITE_SCALE : -SPRITE_SCALE, SPRITE_SCALE});
 }
 
 void Player::drawPlayer(dl::RenderWindow &window)
@@ -129,7 +135,8 @@ void Player::drawPlayer(dl::RenderWindow &window)
     dl::Vector2f actualPos = m_sprite.getPosition();
     dl::Vector2f roundedPos = {std::floor(actualPos.x), std::floor(actualPos.y)};
 
-    m_camera.reset({roundedPos.x - 50.0f, roundedPos.y - 160.0f, 400.0f, 240.0f});
+    float xClamp = std::clamp(roundedPos.x - 80.f, 0.f, 100000.f);
+    m_camera.reset({xClamp, roundedPos.y - 160.0f, 400.0f, 240.0f});
     m_sprite.setPosition(roundedPos);
 
     window.draw(m_sprite);

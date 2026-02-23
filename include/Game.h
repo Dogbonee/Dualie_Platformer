@@ -11,11 +11,7 @@
 
 
 class Game {
-    const int TOP_WIDTH = 400;
-    const int TOP_HEIGHT = 240;
 
-    const int BOTTOM_WIDTH = 320;
-    const int BOTTOM_HEIGHT = 240;
 
     dl::RenderWindow *m_window;
     dl::Clock m_globalClock;

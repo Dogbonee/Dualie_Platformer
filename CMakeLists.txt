@@ -12,6 +12,7 @@ add_executable(${PROJECT_NAME} main.cpp
         include/PlatformerScene.h
         src/Player.cpp
         include/Player.h
+        include/Settings.h
 )
 include_directories(include)
 target_link_libraries(${PROJECT_NAME} ${DUALIE_LIBRARY})
