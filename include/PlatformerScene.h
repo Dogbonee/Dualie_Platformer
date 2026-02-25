@@ -12,6 +12,7 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <Dualie/>
 
 
 
@@ -31,6 +32,8 @@ class PlatformerScene : public Scene {
     std::vector<Entity *> m_entities;
     std::vector<Heart> m_hearts;
     int m_expectedHealth;
+
+    dl::Music
 
     Level m_level;
 
