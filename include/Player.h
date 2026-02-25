@@ -6,43 +6,40 @@
 #define DUALIE_PLATFORMER_PLAYER_H
 #include <Dualie/Graphics.hpp>
 #include <Settings.h>
+#include <Entity.h>
 #include <algorithm>
 
-typedef std::vector<std::vector<dl::Sprite *> > Level;
 
-class Player {
-    std::vector<dl::SpriteSheet *> *p_spriteSheets;
-    dl::SpriteSheet **p_currentSheet;
-    Level *p_level;
-
-    dl::Sprite m_sprite;
-    dl::Vector2f m_velocity;
-    float m_speed;
-    float m_gravity;
-    float m_jumpForce;
-    bool m_isOnGround;
-    bool m_facingRight;
-
-    float m_animationClock;
-    float m_frameTime;
-
-    int m_frames;
-    int m_currentFrame;
-
-
+class Player : public Entity {
     dl::View m_camera;
-    float m_cameraSpeed;
+
+    bool m_hit;
+    bool m_dead;
+    bool m_invincible;
+    int m_lives;
+    int m_health;
+
+
+    float m_invincibleTimer;
+    float m_invincibleTime;
+
+    float m_deathTimer;
+    float m_deathTime;
 
 public:
-    Player(std::vector<dl::SpriteSheet *> &spriteSheet, Level *level);
+    Player(const dl::Vector2f &initialPosition, dl::SpriteSheet &spriteSheet, Level *level);
 
     virtual ~Player() = default;
 
-    void handleMovement(float dt);
+    int handleMovement(float dt) override;
 
-    void handleAnimation(float dt);
+    bool handleAnimation(float dt) override;
 
-    void drawPlayer(dl::RenderWindow &window);
+    void hit(bool fromRight);
+
+    void drawEntity(dl::RenderWindow &window) override;
+
+    const bool& isDead() const;
 };
 
 

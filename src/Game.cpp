@@ -4,11 +4,14 @@
 
 #include "Game.h"
 
+float Game::DT = 0.0f;
+dl::Clock Game::GlobalClock;
 
 Game::Game()
 {
     m_window = new dl::RenderWindow();
-    m_currentScene = new PlatformerScene(&m_dt);
+    m_currentScene = new PlatformerScene(&DT);
+    m_window->registerHookCallback(handleEvents);
 }
 
 Game::~Game()
@@ -19,7 +22,7 @@ Game::~Game()
 
 void Game::update()
 {
-    m_dt = m_globalClock.restart().asSeconds();
+    DT = GlobalClock.restart().asSeconds();
     m_currentScene->update();
     m_currentScene->render(*m_window);
 }
@@ -29,5 +32,13 @@ void Game::run()
     while (m_window->isOpen())
     {
         update();
+    }
+}
+
+void Game::handleEvents(dl::HOOK_TYPE type)
+{
+    if (type == dl::HOOK_TYPE::RESTORE || type == dl::HOOK_TYPE::WAKEUP)
+    {
+        DT = GlobalClock.restart().asSeconds();
     }
 }

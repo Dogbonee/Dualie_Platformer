@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 project(Dualie_Platformer)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 find_package(Dualie REQUIRED)
 
 add_executable(${PROJECT_NAME} main.cpp
@@ -13,6 +13,12 @@ add_executable(${PROJECT_NAME} main.cpp
         src/Player.cpp
         include/Player.h
         include/Settings.h
+        src/Entity.cpp
+        include/Entity.h
+        src/Goblin.cpp
+        include/Goblin.h
+        src/Heart.cpp
+        include/Heart.h
 )
 include_directories(include)
 target_link_libraries(${PROJECT_NAME} ${DUALIE_LIBRARY})

@@ -1,12 +1,12 @@
 from pathlib import Path
 import os
 
-directory_path = Path('../sheets/background/')
+directory_path = Path('../sheets/heart/')
 output_file = f'{directory_path.resolve()}/sheet.t3s'
 
 t3xPath = Path(f'../romfs/gfx')
 
-#os.system("convert assets/herochar/herochar_jump_down_anim_strip_3.png -crop 16x16 +repage sheets/player_jump_down/image_%d.png")
+#os.system("convert ../assets/herochar/herochar_spritesheet.png -crop 16x16 +repage ../sheets/player_sheet/image_%d.png")
 
 files = sorted(
     [f.name for f in directory_path.iterdir() if f.is_file() and f.suffix == '.png'],

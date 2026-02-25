@@ -5,23 +5,18 @@
 #include "../include/PlatformerScene.h"
 
 
-PlatformerScene::PlatformerScene(const float *m_dt) : Scene(m_dt)
+PlatformerScene::PlatformerScene(const float *m_dt) : Scene(m_dt), m_expectedHealth(MAX_HEALTH)
 {
-    dl::SpriteSheet *idleSpriteSheet = new dl::SpriteSheet();
-    dl::SpriteSheet *runSpriteSheet = new dl::SpriteSheet();
-    dl::SpriteSheet *jumpUpSpriteSheet = new dl::SpriteSheet();
-    dl::SpriteSheet *jumpDownSpriteSheet = new dl::SpriteSheet();
-    idleSpriteSheet->loadFromFile("romfs:/gfx/player_idle.t3x");
-    runSpriteSheet->loadFromFile("romfs:/gfx/player_run.t3x");
-    jumpUpSpriteSheet->loadFromFile("romfs:/gfx/player_jump_up.t3x");
-    jumpDownSpriteSheet->loadFromFile("romfs:/gfx/player_jump_down.t3x");
-    m_playerSpriteSheets.emplace_back(idleSpriteSheet);
-    m_playerSpriteSheets.emplace_back(runSpriteSheet);
-    m_playerSpriteSheets.emplace_back(jumpUpSpriteSheet);
-    m_playerSpriteSheets.emplace_back(jumpDownSpriteSheet);
+    m_playerSpriteSheet = new dl::SpriteSheet;
+    m_goblinSpriteSheet = new dl::SpriteSheet;
+    m_heartSpriteSheet = new dl::SpriteSheet;
+    m_playerSpriteSheet->loadFromFile("romfs:/gfx/player_sheet.t3x");
+    m_goblinSpriteSheet->loadFromFile("romfs:/gfx/goblin_sheet.t3x");
+    m_heartSpriteSheet->loadFromFile("romfs:/gfx/heart.t3x");
+
 
     m_tileSpriteSheet.loadFromFile("romfs:/gfx/tileset.t3x");
-    m_player = new Player(m_playerSpriteSheets, &m_level);
+    m_player = new Player({120, 120}, *m_playerSpriteSheet, &m_level);
 
     m_backgroundSpriteSheet.loadFromFile("romfs:/gfx/background.t3x");
     m_backgroundSprite.loadFromSpriteSheet(m_backgroundSpriteSheet, 0);
@@ -29,17 +24,24 @@ PlatformerScene::PlatformerScene(const float *m_dt) : Scene(m_dt)
     m_backgroundSprite.viewShouldAffect(false);
 
 
-    loadLevel(0);
+    for (int i = 0; i < 3; i++)
+    {
+        Heart heart({i * 90.f + 65.f, dl::RenderWindow::BOTTOM_HEIGHT / 2}, *m_heartSpriteSheet);
+        m_hearts.push_back(heart);
+    }
+
+    loadLevel(1);
 }
 
 PlatformerScene::~PlatformerScene()
 {
     delete m_player;
 
-    for (auto &sheet: m_playerSpriteSheets)
+    for (auto &entity: m_entities)
     {
-        delete sheet;
+        delete entity;
     }
+
 
     for (auto &row: m_level)
     {
@@ -51,13 +53,18 @@ PlatformerScene::~PlatformerScene()
             }
         }
     }
+    delete m_playerSpriteSheet;
+    delete m_goblinSpriteSheet;
+    delete m_heartSpriteSheet;
 }
 
 
 void PlatformerScene::loadLevel(int levelIndex)
 {
     std::ifstream levelFile;
-    levelFile.open("romfs:/levels/level1.lvl");
+    char filePath[128];
+    sprintf(filePath, "romfs:/levels/level%d.lvl", levelIndex);
+    levelFile.open(filePath);
     std::string buf;
 
     for (int row = 0; std::getline(levelFile, buf); row++)
@@ -67,12 +74,21 @@ void PlatformerScene::loadLevel(int levelIndex)
         int tileBuf;
         for (int col = 0; ss >> tileBuf; col++)
         {
-            if (tileBuf != 0)
+            if (tileBuf == -1)
+            {
+                Goblin *goblin = new Goblin({(col * TILE_SIZE * SPRITE_SCALE), (row * TILE_SIZE * SPRITE_SCALE)},
+                                            *m_goblinSpriteSheet, &m_level, m_player);
+                m_entities.push_back(goblin);
+            }
+            if (tileBuf > 0)
             {
                 dl::Sprite *tile = new dl::Sprite;
                 tile->loadFromSpriteSheet(m_tileSpriteSheet, tileBuf - 1);
                 tile->setScale({SPRITE_SCALE, SPRITE_SCALE});
-                tile->setPosition({static_cast<float>(col * TILE_SIZE * SPRITE_SCALE), static_cast<float>(row * TILE_SIZE * SPRITE_SCALE)});
+                tile->setPosition({
+                    static_cast<float>(col * TILE_SIZE * SPRITE_SCALE),
+                    static_cast<float>(row * TILE_SIZE * SPRITE_SCALE)
+                });
                 m_level.back().push_back(tile);
             } else
             {
@@ -98,15 +114,44 @@ void PlatformerScene::render(dl::RenderWindow &window)
             }
         }
     }
-    m_player->drawPlayer(window); // Player will also display, so put all draw calls above this
+    for (auto &entity: m_entities)
+    {
+        entity->drawEntity(window);
+    }
+    m_player->drawEntity(window); // Player will also display, so put all draw calls above this
 
     window.clear(dl::BOTTOM_SCREEN);
     window.draw(m_backgroundSprite);
+    for (auto &heart: m_hearts)
+    {
+        heart.drawHeart(window);
+    }
     window.display();
 }
 
 void PlatformerScene::update()
 {
-    m_player->handleMovement(*m_dt);
+    int playerHealth = m_player->handleMovement(*m_dt);
     m_player->handleAnimation(*m_dt);
+    for (auto &entity: m_entities)
+    {
+        entity->handleMovement(*m_dt);
+        entity->handleAnimation(*m_dt);
+    }
+
+    if (playerHealth != m_expectedHealth)
+    {
+        if (playerHealth == MAX_HEALTH)
+        {
+            for (auto &heart: m_hearts)
+            {
+                heart.restore();
+            }
+        }
+        else if (playerHealth >= 0)
+        {
+            m_hearts[playerHealth].kill();
+            m_expectedHealth = playerHealth;
+        }
+    }
 }

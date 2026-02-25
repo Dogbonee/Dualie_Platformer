@@ -4,143 +4,147 @@
 #include <stdio.h>
 #include "../include/Player.h"
 
-Player::Player(std::vector<dl::SpriteSheet *> &spriteSheets, Level *level) : p_spriteSheets(&spriteSheets),
-                                                                             p_currentSheet(&spriteSheets[0]),
-                                                                             p_level(level), m_speed(400),
-                                                                             m_animationClock(0), m_frameTime(0.1),
-                                                                             m_frames(4), m_currentFrame(0),
-                                                                             m_gravity(0.5), m_isOnGround(false),
-                                                                             m_jumpForce(0.4), m_facingRight(true)
+Player::Player(const dl::Vector2f &initialPosition, dl::SpriteSheet &spriteSheet, Level *level)
+    : Entity(initialPosition, spriteSheet, level),
+      m_hit(false),
+      m_dead(false),
+      m_invincible(false),
+      m_lives(5),
+      m_health(3),
+      m_invincibleTimer(0),
+      m_invincibleTime(1),
+      m_deathTimer(0),
+      m_deathTime(2)
 {
-    m_sprite.loadFromSpriteSheet(*spriteSheets[0], 0);
-    m_sprite.setPosition({120, 120});
 }
 
-void Player::handleMovement(float dt)
+int Player::handleMovement(float dt)
 {
-    m_velocity.x = dt * m_speed * (dl::Input::isKeyHeld(dl::Input::RIGHT) - dl::Input::isKeyHeld(dl::Input::LEFT));
-    m_velocity.y += m_gravity * dt;
+    if (m_dead)
+    {
+        m_velocity = {0, 0};
+        return m_health;
+    }
+    m_attemptedVelocity.x = dt * m_acceleration * (
+                                dl::Input::isKeyHeld(dl::Input::RIGHT) - dl::Input::isKeyHeld(dl::Input::LEFT));
+
     if (m_isOnGround && dl::Input::isKeyPressed(dl::Input::A))
     {
         m_isOnGround = false;
-        m_velocity.y = -m_jumpForce;
+        m_attemptedVelocity.y = -m_jumpForce;
     }
     if (dl::Input::isKeyReleased(dl::Input::A) && m_velocity.y < 0)
     {
         m_velocity.y /= 2;
     }
 
+    Entity::handleMovement(dt);
 
-    dl::FloatRect projectedX = dl::FloatRect(m_sprite.getPosition() + dl::Vector2f(m_velocity.x, 0), {TILE_SIZE * SPRITE_SCALE, TILE_SIZE * SPRITE_SCALE});
-    dl::FloatRect projectedY = dl::FloatRect(m_sprite.getPosition() + dl::Vector2f(0, m_velocity.y), {TILE_SIZE * SPRITE_SCALE, TILE_SIZE * SPRITE_SCALE});
-
-    if (projectedX.left < 0)
+    if (m_invincible)
     {
-        m_sprite.setPosition({0, m_sprite.getPosition().y});
-        m_velocity.x = 0;
-    }
-
-    dl::Vector2i projectedUnit = {
-        static_cast<int>((m_sprite.getPosition().x + m_velocity.x) / (TILE_SIZE * SPRITE_SCALE)),
-        static_cast<int>((m_sprite.getPosition().y + m_velocity.y) / (TILE_SIZE * SPRITE_SCALE))
-    };
-
-    for (int i = projectedUnit.y - 1; i <= projectedUnit.y + 1; i++)
-    {
-        if (i < 0 || i >= p_level->size()) continue;
-
-        for (int j = projectedUnit.x - 1; j <= projectedUnit.x + 1; j++)
+        m_invincibleTimer += dt;
+        if (m_invincibleTimer > m_invincibleTime)
         {
-            if (j < 0 || j >= (*p_level)[i].size()) continue;
-
-            dl::Sprite *tile = (*p_level)[i][j];
-            if (tile)
-            {
-                dl::FloatRect tileRect(tile->getPosition(), {TILE_SIZE * SPRITE_SCALE, TILE_SIZE * SPRITE_SCALE});
-
-                if (projectedX.intersects(tileRect))
-                {
-                    if (m_velocity.x > 0)
-                    {
-                        m_sprite.setPosition({tile->getPosition().x - (TILE_SIZE * SPRITE_SCALE), m_sprite.getPosition().y});
-                    } else if (m_velocity.x < 0)
-                    {
-                        m_sprite.setPosition({tile->getPosition().x + (TILE_SIZE * SPRITE_SCALE), m_sprite.getPosition().y});
-                    }
-                    m_velocity.x = 0;
-                }
-
-                if (projectedY.intersects(tileRect))
-                {
-                    if (m_velocity.y > 0)
-                    {
-                        m_sprite.setPosition({m_sprite.getPosition().x, tile->getPosition().y - (TILE_SIZE * SPRITE_SCALE)});
-                        m_isOnGround = true;
-                    } else if (m_velocity.y < 0)
-                    {
-                        m_sprite.setPosition({m_sprite.getPosition().x, tile->getPosition().y + (TILE_SIZE * SPRITE_SCALE)});
-                    }
-                    m_velocity.y = 0;
-                }
-            }
+            m_invincible = false;
+            m_invincibleTimer = 0;
         }
     }
 
-    m_sprite.move(m_velocity);
+    return m_health;
 }
 
-void Player::handleAnimation(float dt)
+bool Player::handleAnimation(float dt)
 {
-    if (m_velocity.x == 0 && m_velocity.y == 0)
+    m_sheetOffset = 0;
+    if (m_dead)
+    {
+        m_frames = 8;
+        m_sheetOffset = 0;
+    } else if (m_hit)
+    {
+        m_frames = 3;
+        m_sheetOffset = 64;
+    } else if (m_velocity.x == 0 && m_velocity.y == 0)
     {
         m_frames = 4;
-        p_currentSheet = &(*p_spriteSheets)[0];
+        m_sheetOffset = 40;
     } else if (m_velocity.x != 0 && m_velocity.y == 0)
     {
         m_frames = 6;
-        p_currentSheet = &(*p_spriteSheets)[1];
+        m_sheetOffset = 8;
     } else if (m_velocity.y < 0)
     {
         m_frames = 3;
-        p_currentSheet = &(*p_spriteSheets)[2];
+        m_sheetOffset = 56;
     } else if (m_velocity.y > 0)
     {
         m_frames = 3;
-        p_currentSheet = &(*p_spriteSheets)[3];
-    }
-    m_animationClock += dt;
-    if (m_animationClock >= m_frameTime)
-    {
-        m_currentFrame++;
-        if (m_currentFrame >= m_frames)
-        {
-            m_currentFrame = 0;
-        }
-        m_sprite.loadFromSpriteSheet(**p_currentSheet, m_currentFrame);
-        m_animationClock = 0;
+        m_sheetOffset = 48;
     }
 
-    if (m_velocity.x > 0)
+    bool done = Entity::handleAnimation(dt);
+    if (m_dead)
     {
-        m_facingRight = true;
-    } else if (m_velocity.x < 0)
+        if (done)
+        {
+            m_sprite.loadFromSpriteSheet(*p_spriteSheet, 15);
+            m_animationRunning = false;
+        }
+        m_deathTimer += dt;
+        if (m_deathTimer >= m_deathTime)
+        {
+            m_dead = false;
+            m_sprite.setPosition(m_initialPosition);
+            m_health = MAX_HEALTH;
+            m_animationRunning = true;
+            m_deathTimer = 0;
+        }
+    } else if (m_hit && done)
     {
-        m_facingRight = false;
+        m_hit = false;
     }
-    m_sprite.setScale({m_facingRight ? SPRITE_SCALE : -SPRITE_SCALE, SPRITE_SCALE});
+
+
+    return true;
 }
 
-void Player::drawPlayer(dl::RenderWindow &window)
+void Player::hit(bool fromRight)
+{
+    if (m_invincible)
+    {
+        return;
+    }
+    m_health--;
+    if (m_health <= 0)
+    {
+        m_dead = true;
+        return;
+    }
+    m_hit = true;
+    m_invincible = true;
+    m_isOnGround = false;
+    m_currentFrame = 0;
+    m_animationClock = 0;
+    m_velocity.y = -m_jumpForce / 1.5;
+    m_velocity.x = fromRight ? -m_jumpForce : m_jumpForce;
+}
+
+void Player::drawEntity(dl::RenderWindow &window)
 {
     dl::Vector2f actualPos = m_sprite.getPosition();
     dl::Vector2f roundedPos = {std::floor(actualPos.x), std::floor(actualPos.y)};
 
-    float xClamp = std::clamp(roundedPos.x - 80.f, 0.f, 100000.f);
-    m_camera.reset({xClamp, roundedPos.y - 160.0f, 400.0f, 240.0f});
+    float xClamp = std::clamp(roundedPos.x - 120.f, 0.f, 100000.f);
+    m_camera.reset({xClamp, 200.0f, 400.0f, 240.0f});
     m_sprite.setPosition(roundedPos);
 
     window.draw(m_sprite);
     window.setView(m_camera);
     window.display();
     m_sprite.setPosition(actualPos); // Fix to prevent tearing
+}
+
+const bool &Player::isDead() const
+{
+    return m_dead;
 }

@@ -4,11 +4,14 @@
 
 #ifndef DUALIE_PLATFORMER_PLATFORMERSCENE_H
 #define DUALIE_PLATFORMER_PLATFORMERSCENE_H
+#include <Goblin.h>
 #include <Player.h>
 #include <Scene.h>
+#include <Heart.h>
 #include <vector>
 #include <fstream>
 #include <sstream>
+
 
 
 class PlatformerScene : public Scene {
@@ -18,9 +21,14 @@ class PlatformerScene : public Scene {
     dl::SpriteSheet m_backgroundSpriteSheet;
     dl::Sprite m_backgroundSprite;
 
-    std::vector<dl::SpriteSheet *> m_playerSpriteSheets;
+    dl::SpriteSheet* m_playerSpriteSheet;
+    dl::SpriteSheet* m_goblinSpriteSheet;
+    dl::SpriteSheet* m_heartSpriteSheet;
 
     Player *m_player;
+    std::vector<Entity *> m_entities;
+    std::vector<Heart> m_hearts;
+    int m_expectedHealth;
 
     Level m_level;
 

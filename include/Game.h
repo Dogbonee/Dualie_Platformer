@@ -14,8 +14,8 @@ class Game {
 
 
     dl::RenderWindow *m_window;
-    dl::Clock m_globalClock;
-    float m_dt;
+
+
 
     Scene *m_currentScene;
 
@@ -24,11 +24,15 @@ class Game {
     void update();
 
 public:
-    Game();
+    static float DT;
+    static dl::Clock GlobalClock;
 
+    Game();
     ~Game();
 
     void run();
+
+    static void handleEvents(dl::HOOK_TYPE type);
 };
 
 
