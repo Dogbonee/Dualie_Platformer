@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 
-directory_path = Path('../sheets/heart/')
+directory_path = Path('../sheets/door/')
 output_file = f'{directory_path.resolve()}/sheet.t3s'
 
 t3xPath = Path(f'../romfs/gfx')

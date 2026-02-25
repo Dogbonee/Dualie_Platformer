@@ -6,6 +6,7 @@
 #define DUALIE_PLATFORMER_PLATFORMERSCENE_H
 #include <Goblin.h>
 #include <Player.h>
+#include <Door.h>
 #include <Scene.h>
 #include <Heart.h>
 #include <vector>
@@ -24,6 +25,7 @@ class PlatformerScene : public Scene {
     dl::SpriteSheet* m_playerSpriteSheet;
     dl::SpriteSheet* m_goblinSpriteSheet;
     dl::SpriteSheet* m_heartSpriteSheet;
+    dl::SpriteSheet* m_doorSpriteSheet;
 
     Player *m_player;
     std::vector<Entity *> m_entities;

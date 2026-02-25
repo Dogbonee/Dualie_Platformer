@@ -5,14 +5,18 @@
 #include "../include/PlatformerScene.h"
 
 
+
+
 PlatformerScene::PlatformerScene(const float *m_dt) : Scene(m_dt), m_expectedHealth(MAX_HEALTH)
 {
     m_playerSpriteSheet = new dl::SpriteSheet;
     m_goblinSpriteSheet = new dl::SpriteSheet;
     m_heartSpriteSheet = new dl::SpriteSheet;
+    m_doorSpriteSheet = new dl::SpriteSheet;
     m_playerSpriteSheet->loadFromFile("romfs:/gfx/player_sheet.t3x");
     m_goblinSpriteSheet->loadFromFile("romfs:/gfx/goblin_sheet.t3x");
     m_heartSpriteSheet->loadFromFile("romfs:/gfx/heart.t3x");
+    m_doorSpriteSheet->loadFromFile("romfs:/gfx/door.t3x");
 
 
     m_tileSpriteSheet.loadFromFile("romfs:/gfx/tileset.t3x");
@@ -56,6 +60,7 @@ PlatformerScene::~PlatformerScene()
     delete m_playerSpriteSheet;
     delete m_goblinSpriteSheet;
     delete m_heartSpriteSheet;
+    delete m_doorSpriteSheet;
 }
 
 
@@ -79,6 +84,11 @@ void PlatformerScene::loadLevel(int levelIndex)
                 Goblin *goblin = new Goblin({(col * TILE_SIZE * SPRITE_SCALE), (row * TILE_SIZE * SPRITE_SCALE)},
                                             *m_goblinSpriteSheet, &m_level, m_player);
                 m_entities.push_back(goblin);
+            } else if (tileBuf == -2)
+            {
+                Door* door = new Door({(col * TILE_SIZE * SPRITE_SCALE), (row * TILE_SIZE * SPRITE_SCALE)},
+                                            *m_doorSpriteSheet, &m_level, m_player);
+                m_entities.push_back(door);
             }
             if (tileBuf > 0)
             {

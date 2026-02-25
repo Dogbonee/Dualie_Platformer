@@ -19,6 +19,8 @@ add_executable(${PROJECT_NAME} main.cpp
         include/Goblin.h
         src/Heart.cpp
         include/Heart.h
+        src/Door.cpp
+        include/Door.h
 )
 include_directories(include)
 target_link_libraries(${PROJECT_NAME} ${DUALIE_LIBRARY})
