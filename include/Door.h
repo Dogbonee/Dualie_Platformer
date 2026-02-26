@@ -16,6 +16,8 @@ public:
     int handleMovement(float dt) override;
 
     void handleCollision(float dt) override;
+
+    dl::FloatRect getGlobalBounds() const override;
 };
 
 

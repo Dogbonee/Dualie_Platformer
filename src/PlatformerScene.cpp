@@ -27,20 +27,23 @@ PlatformerScene::PlatformerScene(const float *m_dt) : Scene(m_dt), m_expectedHea
     m_backgroundSprite.setScale({2, 2});
     m_backgroundSprite.viewShouldAffect(false);
 
+    m_levelMusic = new dl::Music;
+    m_levelMusic->loadFromFile("romfs:/music/music.opus");
+    m_levelMusic->setLooping(true);
+    m_levelMusic->play();
 
     for (int i = 0; i < 3; i++)
     {
         Heart heart({i * 90.f + 65.f, dl::RenderWindow::BOTTOM_HEIGHT / 2}, *m_heartSpriteSheet);
         m_hearts.push_back(heart);
     }
-
     loadLevel(1);
+
 }
 
 PlatformerScene::~PlatformerScene()
 {
     delete m_player;
-
     for (auto &entity: m_entities)
     {
         delete entity;
@@ -61,6 +64,7 @@ PlatformerScene::~PlatformerScene()
     delete m_goblinSpriteSheet;
     delete m_heartSpriteSheet;
     delete m_doorSpriteSheet;
+    delete m_levelMusic;
 }
 
 
@@ -114,21 +118,35 @@ void PlatformerScene::render(dl::RenderWindow &window)
 {
     window.clear(dl::TOP_SCREEN, dl::Color(128, 128, 128));
     window.draw(m_backgroundSprite);
-    for (auto &row: m_level)
+
+    float viewX = m_player->getPosition().x;
+    float viewY = m_player->getPosition().y;
+
+    float scaledTile = TILE_SIZE * SPRITE_SCALE;
+
+    int startRow = std::max(0, static_cast<int>(std::floor((viewY - dl::RenderWindow::TOP_HEIGHT) / scaledTile)));
+    int endRow = std::min(static_cast<int>(m_level.size()), static_cast<int>(std::floor((viewY + dl::RenderWindow::TOP_HEIGHT * 2) / scaledTile)) + 1);
+
+    for (int row = startRow; row < endRow; row++)
     {
-        for (auto &tile: row)
+        int startCol = std::max(0, static_cast<int>(std::floor((viewX - dl::RenderWindow::TOP_WIDTH) / scaledTile)));
+        int endCol = std::min(static_cast<int>(m_level[row].size()), static_cast<int>(std::floor((viewX + dl::RenderWindow::TOP_WIDTH) / scaledTile)) + 1);
+
+
+        for (int col = startCol; col < endCol; col++)
         {
-            if (tile)
+            if (m_level[row][col])
             {
-                window.draw(*tile);
+                window.draw(*m_level[row][col]);
             }
         }
     }
+
     for (auto &entity: m_entities)
     {
         entity->drawEntity(window);
     }
-    m_player->drawEntity(window); // Player will also display, so put all draw calls above this
+    m_player->drawEntity(window);
 
     window.clear(dl::BOTTOM_SCREEN);
     window.draw(m_backgroundSprite);
@@ -138,6 +156,7 @@ void PlatformerScene::render(dl::RenderWindow &window)
     }
     window.display();
 }
+
 
 void PlatformerScene::update()
 {
@@ -151,17 +170,23 @@ void PlatformerScene::update()
 
     if (playerHealth != m_expectedHealth)
     {
-        if (playerHealth == MAX_HEALTH)
+        int safeHealth = std::max(0, std::min(playerHealth, MAX_HEALTH));
+
+        if (safeHealth > m_expectedHealth)
         {
-            for (auto &heart: m_hearts)
+            for (int i = m_expectedHealth; i < safeHealth; i++)
             {
-                heart.restore();
+                m_hearts[i].restore();
             }
         }
-        else if (playerHealth >= 0)
+        else if (safeHealth < m_expectedHealth)
         {
-            m_hearts[playerHealth].kill();
-            m_expectedHealth = playerHealth;
+            for (int i = m_expectedHealth - 1; i >= safeHealth; i--)
+            {
+                m_hearts[i].kill();
+            }
         }
+
+        m_expectedHealth = playerHealth;
     }
 }

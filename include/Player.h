@@ -35,7 +35,7 @@ public:
 
     bool handleAnimation(float dt) override;
 
-    void hit(bool fromRight);
+    void hit(int damage, bool fromRight);
 
     void drawEntity(dl::RenderWindow &window) override;
 

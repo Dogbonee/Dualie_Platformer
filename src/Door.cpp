@@ -22,8 +22,13 @@ void Door::handleCollision(float dt)
 {
     if (getGlobalBounds().intersects(p_player->getGlobalBounds()))
     {
-
+        p_player->hit(3, true);
     }
+}
+
+dl::FloatRect Door::getGlobalBounds() const
+{
+    return {{m_sprite.getPosition()}, {TILE_SIZE * 2.5, TILE_SIZE * 2.5}};
 }
 
 

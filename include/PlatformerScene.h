@@ -12,7 +12,7 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
-#include <Dualie/>
+#include <Dualie/Audio.hpp>
 
 
 
@@ -33,7 +33,7 @@ class PlatformerScene : public Scene {
     std::vector<Heart> m_hearts;
     int m_expectedHealth;
 
-    dl::Music
+    dl::Music* m_levelMusic;
 
     Level m_level;
 

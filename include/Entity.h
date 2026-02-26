@@ -52,9 +52,10 @@ public:
     virtual bool handleAnimation(float dt);
 
     virtual void drawEntity(dl::RenderWindow &window);
+    virtual dl::FloatRect getGlobalBounds() const;
 
     const dl::Vector2f& getPosition() const;
-    dl::FloatRect getGlobalBounds() const;
+
 
 
 

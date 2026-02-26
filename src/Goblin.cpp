@@ -29,7 +29,7 @@ int Goblin::handleMovement(float dt)
 
     if (getGlobalBounds().intersects(p_player->getGlobalBounds()))
     {
-        p_player->hit(p_player->getPosition().x < m_sprite.getPosition().x);
+        p_player->hit(1, p_player->getPosition().x < m_sprite.getPosition().x);
     }
     return 0;
 }

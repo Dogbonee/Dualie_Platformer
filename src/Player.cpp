@@ -108,14 +108,19 @@ bool Player::handleAnimation(float dt)
     return true;
 }
 
-void Player::hit(bool fromRight)
+void Player::hit(int damage, bool fromRight)
 {
     if (m_invincible)
     {
         return;
     }
-    m_health--;
-    if (m_health <= 0)
+    m_health -= damage;
+    if (m_health < 0)
+    {
+        m_health = 0;
+    }
+
+    if (m_health == 0)
     {
         m_dead = true;
         return;
