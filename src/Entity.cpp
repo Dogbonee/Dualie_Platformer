@@ -62,14 +62,10 @@ void Entity::handleCollision(float dt)
         static_cast<int>((m_sprite.getPosition().y + m_velocity.y * dt) / (TILE_SIZE * SPRITE_SCALE))
     };
 
-    for (int i = projectedUnit.y - 1; i <= projectedUnit.y + 1; i++)
+    for (int i = std::max(0, projectedUnit.y - 1); i <= std::min(static_cast<int>(p_level->size()), projectedUnit.y + 1); i++)
     {
-        if (i < 0 || i >= p_level->size()) continue;
-
-        for (int j = projectedUnit.x - 1; j <= projectedUnit.x + 1; j++)
+        for (int j = std::max(0, projectedUnit.x - 1); j <= std::min(static_cast<int>((*p_level)[i].size()), projectedUnit.x + 1); j++)
         {
-            if (j < 0 || j >= (*p_level)[i].size()) continue;
-
             dl::Sprite *tile = (*p_level)[i][j];
             if (tile)
             {

@@ -17,9 +17,14 @@ int Goblin::handleMovement(float dt)
 {
     float distance = p_player->getPosition().x - m_sprite.getPosition().x;
 
-    if (!p_player->isDead() && abs(distance) < 200)
+    if (!p_player->isDead() && abs(distance) < 250)
     {
-        m_attemptedVelocity.x = dt * m_acceleration * (distance / abs(distance));
+        if (distance != 0.0f) {
+            float direction = (distance > 0) ? 1.0f : -1.0f;
+            m_attemptedVelocity.x = dt * m_acceleration * direction;
+        } else {
+            m_attemptedVelocity.x = 0;
+        }
     } else
     {
         m_velocity.x = 0;
@@ -45,8 +50,7 @@ bool Goblin::handleAnimation(float dt)
         m_frames = 6;
         m_sheetOffset = 0;
     }
-    Entity::handleAnimation(dt);
-    return true;
+    return Entity::handleAnimation(dt);
 }
 
 void Goblin::drawEntity(dl::RenderWindow &window)
