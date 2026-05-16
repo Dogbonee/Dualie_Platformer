@@ -27,7 +27,7 @@ PlatformerScene::PlatformerScene(const float *m_dt) : Scene(m_dt), m_expectedHea
     m_backgroundSprite.setScale({2, 2});
     m_backgroundSprite.viewShouldAffect(false);
 
-    m_levelMusic = new dl::Music;
+    m_levelMusic = new dl::Music(0);
     m_levelMusic->loadFromFile("romfs:/music/music.opus");
     m_levelMusic->setLooping(true);
     m_levelMusic->play();
